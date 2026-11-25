@@ -1,17 +1,11 @@
-import sys, argparse, tomllib
+import sys, argparse, tomllib, h5py
 from pathlib import Path
 import numpy as np
 import pandas as pd
 import geopandas as gpd
 from shapely.geometry import LineString
 
-def write_geodf_to_format(df, ofile):
-    if ofile.suffix == '.csv':
-        df.drop(columns='geometry').to_csv(ofile)
-    if ofile.suffix == '.shp':
-        df.to_file(ofile)
-    if ofile.suffix == '.geojson':
-        df.to_crs('epsg:4326').to_file(ofile, driver='GeoJSON')
+from utils import write_geodf_to_format, write_to_excel
 
 def add_trn_dwell(trn, cap, complex_modes, tp_hours):
     trn['vehiclesPerPeriod'] = trn['FREQ'].map(lambda x: tp_hours*60.0/x)
@@ -139,6 +133,84 @@ def loaded_transit(conifg):
     for format in output_formats:
         write_geodf_to_format(daily, odir / (tp_to_ofile_root['Daily'] + format))
 
+
+def get_od_trips(idir, timeperiods, mode_num_to_name, tp_to_ifile):
+    dfs = []
+
+    for tp in timeperiods:
+        trip = h5py.File(Path(idir) / tp_to_ifile[tp])
+        zones = trip['1'].shape[0]
+
+        for mode_num, mode_name in mode_num_to_name.items():
+            df = pd.DataFrame()
+            df['otaz'] = np.tile(range(1,zones), zones)
+            temp = pd.DataFrame.from_records(trip[str(mode_num)][:,:]).melt()
+            df['dtaz'] = temp['variable'].astype(int) + 1
+            df['timeperiod'] = tp
+            df['mode'] = mode_name
+            df['trips'] = temp['value']
+            df = df.loc[df['trips'].gt(0)]
+            dfs.append(df)
+
+    return pd.concat(dfs)
+
+def get_od_table_data(trips, timeperiods):
+    table_data = {}
+    for tp in ['Daily'] + timeperiods:
+        table_data[tp] = {}
+        for mode in ['Total','DA','SR2','SR3','TNC','COM','TRK']:
+            table_name = f'{tp} {mode} Vehicle Trips'
+            tp_cond = pd.Series(index=trips.index, data=True)
+            mode_cond = pd.Series(index=trips.index, data=True)
+            if tp != 'Daily':
+                tp_cond = trips['timeperiod'].eq(tp)
+            if mode != 'Total':
+                mode_cond = trips['mode_simple'].eq(mode)
+            df = trips.loc[tp_cond & mode_cond].pivot_table(
+                index=['odist','odistname'],
+                columns=['ddist','ddistname'],
+                values='trips',
+                aggfunc='sum'
+            )
+            table_data[tp][table_name] = df
+
+    return table_data
+
+def od(config):
+    idir = Path(config['od']['idir'])
+    odir = Path(config['od']['odir'])
+    ofile = odir / config['od']['ofile']
+    timeperiods = config['timeperiods']
+    mode_num_to_name = config['od']['mode_num_to_name']
+    tp_to_ifile = config['od']['tp_to_ifile']
+    mode_to_simple_mode = config['od']['mode_to_simple_mode']
+    template = config['od']['template']
+
+    taz_to_dist = pd.read_csv(config['taz_to_dist'], usecols=['TAZ','DIST','DISTNAME'])
+
+    trips = get_od_trips(
+        idir=idir,
+        timeperiods=timeperiods,
+        mode_num_to_name=mode_num_to_name,
+        tp_to_ifile=tp_to_ifile
+    )
+
+    trips = pd.merge(trips, taz_to_dist.rename(columns={'TAZ':'otaz','DIST':'odist','DISTNAME':'odistname'}))
+    trips = pd.merge(trips, taz_to_dist.rename(columns={'TAZ':'dtaz','DIST':'ddist','DISTNAME':'ddistname'}))
+
+    trips['mode_simple'] = trips['mode'].map(
+        lambda x: mode_to_simple_mode[x]
+    )
+
+    table_data = get_od_table_data(trips, timeperiods)
+
+    write_to_excel(
+        template_path=template,
+        output_path=ofile,
+        table_data=table_data,
+        first_key_is_worksheet=True
+    )
+
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description="Process TOML configuration file for validation.")
     parser.add_argument("config_path", type=str, help="Path to the TOML configuration file.")
@@ -156,6 +228,8 @@ if __name__=='__main__':
         loaded_roads(config)
         print('running loaded_transit')
         loaded_transit(config)
+        print('running od')
+        od(config)
         
     else:
         print("Please supply a config file.")

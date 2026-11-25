@@ -2,6 +2,7 @@ modelrun = 'X:/Projects/ECP/Run19_2023_ECP'
 nodes = 'Q:/Model Development/CHAMP7CE/Scenarios/Run19_2023_ECP/RunRecord/cube_export/nodes.shp'
 freeflow='X:/Projects/ECP/Run19_2023_ECP/freeflow.shp'
 timeperiods = ['EA','AM','MD','PM','EV']
+taz_to_dist = 'Q:/Model Projects/ECP/geo/embarcadero_subarea_19_dist.csv'
 [tp_to_hours]
 EA = 3
 AM = 3
@@ -68,5 +69,44 @@ Daily = 'loaded_transit_daily'
 
 
 [od]
-idir=""
-odir=""
+idir='X:/Projects/ECP/Run19_2023_ECP'
+odir='Q:/Model Projects/ECP/model_runs/01_2023_Base'
+ofile='OD_01_2023_Base.xlsx'
+template='./templates/OD Template.xlsx'
+
+[od.tp_to_ifile]
+EA = 'SFPTEA.h5'
+AM = 'SFPTAM.h5'
+MD = 'SFPTAM.h5'
+PM = 'SFPTAM.h5'
+EV = 'SFPTAM.h5'
+
+[od.mode_num_to_name]
+1 = 'DA'
+2 = 'SR2'
+3 = 'SR3'
+4 = 'DA_TOLL'
+5 = 'SR2_TOLL'
+6 = 'SR3_TOLL'
+28 = 'TNC1'
+29 = 'TNC2'
+30 = 'TNC3'
+31 = 'TRK'
+32 = 'TRK_TOLL'
+34 = 'COM'
+35 = 'COM_TOLL'
+
+[od.mode_to_simple_mode]
+'DA' = 'DA'
+'DA_TOLL' = 'DA'
+'SR2' = 'SR2'
+'SR2_TOLL' = 'SR2'
+'SR3' = 'SR3'
+'SR3_TOLL' = 'SR3'
+'TNC1' = 'TNC'
+'TNC2' = 'TNC'
+'TNC3' = 'TNC'
+'COM' = 'COM'
+'COM_TOLL' = 'COM'
+'TRK' = 'TRK'
+'TRK_TOLL' = 'TRK'

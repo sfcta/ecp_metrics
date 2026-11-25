@@ -1,0 +1,72 @@
+modelrun = 'X:/Projects/ECP/Run19_2023_ECP'
+nodes = 'Q:/Model Development/CHAMP7CE/Scenarios/Run19_2023_ECP/RunRecord/cube_export/nodes.shp'
+freeflow='X:/Projects/ECP/Run19_2023_ECP/freeflow.shp'
+timeperiods = ['EA','AM','MD','PM','EV']
+[tp_to_hours]
+EA = 3
+AM = 3
+MD = 6.5
+PM = 3
+EV = 8.5
+
+[loaded_roads]
+idir='Q:/Model Projects/ECP/model_runs/01_2023_Base/loaded_roads/sumvol'
+odir="Q:/Model Projects/ECP/model_runs/01_2023_Base/loaded_roads"
+output_formats = ['.csv','.geojson','.shp']
+daily_info_columns = ['A','B']
+daily_sum_columns = ['DA', 'SR2', 'SR3', 'COM', 'TRK', 'BUS', 'TNC', 'AUTOVOL', 'PAXVOL', 'TOTVOL', 'PCEVOL']
+
+[loaded_roads.tp_to_ifile]
+EA = 'EA_Loaded_Net_PD_HR.dbf'
+AM = 'AM_Loaded_Net_PD_HR.dbf'
+MD = 'MD_Loaded_Net_PD_HR.dbf'
+PM = 'PM_Loaded_Net_PD_HR.dbf'
+EV = 'EV_Loaded_Net_PD_HR.dbf'
+
+[loaded_roads.tp_to_ofile_root]
+EA = 'loaded_roads_ea'
+AM = 'loaded_roads_am'
+MD = 'loaded_roads_md'
+PM = 'loaded_roads_pm'
+EV = 'loaded_roads_ev'
+Daily = 'loaded_roads_daily'
+
+
+[loaded_transit]
+complex_modes = [11, 12, 13, 16, 17, 18, 19, 22, 23, 24, 25]
+idir='X:/Projects/ECP/Run19_2023_ECP'
+odir="Q:/Model Projects/ECP/model_runs/01_2023_Base/loaded_transit"
+output_formats = ['.csv','.geojson','.shp']
+daily_info_columns = ['A','B','AB','MODE','NAME','FULLNAME','SYSTEM']
+daily_sum_columns = [
+ 'AB_VOL',
+ 'AB_BRDA',
+ 'AB_XITA',
+ 'AB_BRDB',
+ 'AB_XITB',
+ 'BA_VOL',
+ 'BA_BRDA',
+ 'BA_XITA',
+ 'BA_BRDB',
+ 'BA_XITB',
+]
+
+[loaded_transit.tp_to_ifile]
+EA = 'SFALLMSAEA.dbf'
+AM = 'SFALLMSAAM.dbf'
+MD = 'SFALLMSAMD.dbf'
+PM = 'SFALLMSAPM.dbf'
+EV = 'SFALLMSAEV.dbf'
+
+[loaded_transit.tp_to_ofile_root]
+EA = 'loaded_transit_ea'
+AM = 'loaded_transit_am'
+MD = 'loaded_transit_md'
+PM = 'loaded_transit_pm'
+EV = 'loaded_transit_ev'
+Daily = 'loaded_transit_daily'
+
+
+[od]
+idir=""
+odir=""
